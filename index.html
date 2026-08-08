@@ -123,6 +123,26 @@
 <style data-starangels-custom>
 /* Star Angels overrides layered on top of the mirrored Framer styles */
 .sa-hidden{display:none !important;}
+
+/* Sticky navbar: transparent -> solid on scroll */
+[data-framer-name="Nav Wrap"],[data-framer-name="Nav OutterWrap"],[data-framer-name="Navbar Bottom"]{transition:background-color .35s ease, box-shadow .35s ease, backdrop-filter .35s ease;}
+html.sa-scrolled [data-framer-name="Nav Wrap"],
+html.sa-scrolled [data-framer-name="Nav OutterWrap"]{background-color:rgba(252,252,252,0.88)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 28px rgba(0,0,0,0.08);}
+
+/* Service card hover lift */
+[data-framer-name="Service Top"]{transition:transform .35s ease;}
+[data-framer-name="Service Top"]:hover{transform:translateY(-6px);}
+
+/* Button / CTA micro-interactions */
+[data-framer-name*="Button"]{transition:transform .2s ease, box-shadow .2s ease;}
+[data-framer-name*="Button"]:hover{transform:translateY(-2px);}
+
+/* FAQ accordion answer panel (injected by the motion script) */
+.sa-faq-answer{height:0;overflow:hidden;}
+.sa-faq-answer > p{margin:0;padding:12px 2px 6px;font-family:'Geist','Geist Placeholder',sans-serif;font-size:16px;line-height:1.55;color:var(--token-1c9727f2-27f6-48a9-b7a2-ad71b590ec93, rgb(117,117,117));}
+
+/* Marquee tickers grab-cursor when interactive */
+[data-framer-name="Ticker Wrap"],[data-framer-name="Testimonials Ticker Wrap"]{cursor:default;}
 </style>
 </head>
 <body>
@@ -579,7 +599,109 @@
 <svg viewBox="0 0 23.529 23.529" overflow="visible" id="svg754775240_674"><g><path d="M 0 23.529 L 0 0 L 23.529 0 L 23.529 23.529 Z" fill="transparent"/><g><path d="M 12.605 0 L 10.924 0 L 10.924 9.736 L 4.04 2.852 L 2.852 4.04 L 9.736 10.924 L 0 10.924 L 0 12.605 L 9.736 12.605 L 2.852 19.489 L 4.04 20.678 L 10.924 13.793 L 10.924 23.529 L 12.605 23.529 L 12.605 13.793 L 19.489 20.678 L 20.678 19.489 L 13.793 12.605 L 23.529 12.605 L 23.529 10.924 L 13.793 10.924 L 20.678 4.04 L 19.489 2.852 L 12.605 9.736 Z" fill="var(--token-82b8a51d-5789-4d24-bea3-2d6dfe9eebe7, rgb(245, 87, 51))"/></g></g></svg>
 </div>
     <!-- Start of bodyEnd -->
-    
+
     <!-- End of bodyEnd -->
+    <!-- Star Angels motion layer: rebuilds the animation/interaction the dead Framer runtime provided, using GSAP + ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script>
+    (function(){
+      function ready(fn){ if(document.readyState!=='loading'){fn();} else {document.addEventListener('DOMContentLoaded',fn);} }
+      ready(function(){
+        var hasGSAP = !!(window.gsap && window.ScrollTrigger);
+        if(hasGSAP){ try{ gsap.registerPlugin(ScrollTrigger); }catch(e){ hasGSAP=false; } }
+        function visible(el){ return !!(el.offsetParent!==null || el.getClientRects().length); }
+        var NAV_OFFSET = 90;
+
+        /* Sticky navbar: transparent -> solid */
+        try{
+          var onScroll=function(){ document.documentElement.classList.toggle('sa-scrolled', window.scrollY>60); };
+          onScroll(); window.addEventListener('scroll', onScroll, {passive:true});
+        }catch(e){}
+
+        /* Smooth anchor scrolling to the visible section variant */
+        try{
+          document.addEventListener('click', function(ev){
+            var a = ev.target.closest && ev.target.closest('a[href^="#"]'); if(!a) return;
+            var id = a.getAttribute('href').slice(1); if(!id) return;
+            var list = [].slice.call(document.querySelectorAll('[data-section="'+id+'"]'));
+            var t = list.filter(visible)[0] || list[0]; if(!t) return;
+            ev.preventDefault();
+            var y = t.getBoundingClientRect().top + window.pageYOffset - NAV_OFFSET;
+            window.scrollTo({top: Math.max(0,y), behavior:'smooth'});
+          });
+        }catch(e){}
+
+        /* Animated number counters */
+        try{
+          [].slice.call(document.querySelectorAll('.sa-count')).filter(visible).forEach(function(el){
+            var target = parseFloat(el.getAttribute('data-count'))||0;
+            var suf = el.getAttribute('data-suffix')||'';
+            var run = function(){ if(el._saDone) return; el._saDone=true;
+              if(hasGSAP){ var o={v:0}; gsap.to(o,{v:target,duration:1.6,ease:'power2.out',onUpdate:function(){ el.textContent=Math.round(o.v)+suf; }}); }
+              else { el.textContent=target+suf; } };
+            if(hasGSAP){ ScrollTrigger.create({trigger:el,start:'top 90%',onEnter:run}); } else { run(); }
+          });
+        }catch(e){}
+
+        /* Scroll-triggered staggered reveals */
+        try{
+          if(hasGSAP){
+            var sel = ['[data-framer-name="Service Top"]','[data-framer-name="Project Card Wrap"]',
+              '[data-framer-name="Approach Step"]','[data-framer-name="Team Sticky Block"]',
+              '[data-framer-name="Question"]'].join(',');
+            var els = [].slice.call(document.querySelectorAll(sel)).filter(function(el){ return visible(el) && !el.classList.contains('sa-hidden'); });
+            if(els.length){
+              gsap.set(els,{opacity:0,y:28});
+              ScrollTrigger.batch(els,{start:'top 88%',once:true,onEnter:function(b){ gsap.to(b,{opacity:1,y:0,duration:0.6,stagger:0.1,ease:'power2.out',overwrite:true}); }});
+              /* safety net so nothing can stay hidden */
+              setTimeout(function(){ els.forEach(function(el){ if(parseFloat(getComputedStyle(el).opacity)<0.05){ gsap.to(el,{opacity:1,y:0,duration:0.3}); } }); try{ScrollTrigger.refresh();}catch(e){} }, 4000);
+            }
+          }
+        }catch(e){}
+
+        /* Horizontally auto-scrolling marquees (service ticker + testimonials) */
+        try{
+          if(hasGSAP){
+            [].slice.call(document.querySelectorAll('[data-framer-name="Ticker Wrap"],[data-framer-name="Testimonials Ticker Wrap"]'))
+              .filter(visible).forEach(function(wrap){
+                /* the moving track is the widest descendant that overflows the wrap */
+                var track=null, best=0, kids=wrap.querySelectorAll('*');
+                for(var k=0;k<kids.length;k++){ var sw=kids[k].scrollWidth; if(sw>best){ best=sw; track=kids[k]; } }
+                if(!track || best <= wrap.clientWidth+20) return;
+                var full = best; var half = full/2;
+                var isTest = wrap.getAttribute('data-framer-name').indexOf('Testimonials')>-1;
+                var pxPerSec = isTest ? 55 : 70;
+                var tween = gsap.to(track,{x:'-='+half, duration: half/pxPerSec, ease:'none', repeat:-1,
+                  modifiers:{ x:function(x){ var v=parseFloat(x); return gsap.utils.wrap(-half,0,v)+'px'; } } });
+                wrap.addEventListener('mouseenter',function(){ tween.timeScale(0.2); });
+                wrap.addEventListener('mouseleave',function(){ tween.timeScale(1); });
+              });
+          }
+        }catch(e){}
+
+        /* FAQ accordion (one open at a time) */
+        try{
+          var qs = [].slice.call(document.querySelectorAll('[data-faq-answer]')).filter(function(el){ return visible(el) && !el.classList.contains('sa-hidden'); });
+          var panels = [];
+          function collapse(panel){ if(!panel) return; if(hasGSAP){ gsap.set(panel,{height:panel.scrollHeight}); gsap.to(panel,{height:0,duration:0.3,ease:'power2.in'}); } else { panel.style.height='0px'; } panel.classList.remove('open'); }
+          function expand(panel){ if(hasGSAP){ var h=panel.scrollHeight; gsap.fromTo(panel,{height:0},{height:h,duration:0.4,ease:'power2.out',onComplete:function(){ panel.style.height='auto'; }}); } else { panel.style.height='auto'; } panel.classList.add('open'); }
+          qs.forEach(function(q){
+            var ans = q.getAttribute('data-faq-answer'); if(!ans) return;
+            var panel = document.createElement('div'); panel.className='sa-faq-answer';
+            var p = document.createElement('p'); p.textContent = ans; panel.appendChild(p);
+            if(q.parentNode){ q.parentNode.insertBefore(panel, q.nextSibling); }
+            panel.style.height='0px';
+            panels.push(panel); q.style.cursor='pointer';
+            q.addEventListener('click', function(){
+              var isOpen = panel.classList.contains('open');
+              panels.forEach(function(pp){ if(pp!==panel) collapse(pp); });
+              if(isOpen){ collapse(panel); } else { expand(panel); }
+            });
+          });
+        }catch(e){}
+      });
+    })();
+    </script>
 </body>
 </html>
