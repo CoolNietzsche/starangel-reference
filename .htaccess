@@ -1,0 +1,73 @@
+# Star Angels — static single-page site (Apache / cPanel)
+# Every block is wrapped in <IfModule> so a missing module can never 500 the site.
+
+# ----------------------------------------------------------------------
+# Basics
+# ----------------------------------------------------------------------
+Options -Indexes
+DirectoryIndex index.html
+AddDefaultCharset utf-8
+
+# ----------------------------------------------------------------------
+# Force HTTPS (works behind cPanel's proxy/AutoSSL too)
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# Compression
+# ----------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml \
+    application/javascript application/x-javascript application/json \
+    application/xml application/rss+xml image/svg+xml application/manifest+json
+</IfModule>
+
+# ----------------------------------------------------------------------
+# Caching
+#   HTML is revalidated so content edits appear immediately.
+#   Static assets (mostly CDN-hosted, but any local ones) cache long.
+# ----------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault                        "access plus 1 week"
+  ExpiresByType text/html               "access plus 0 seconds"
+  ExpiresByType text/css                "access plus 1 year"
+  ExpiresByType application/javascript  "access plus 1 year"
+  ExpiresByType image/svg+xml           "access plus 1 year"
+  ExpiresByType image/x-icon            "access plus 1 year"
+  ExpiresByType image/png               "access plus 1 year"
+  ExpiresByType image/jpeg              "access plus 1 year"
+  ExpiresByType image/webp              "access plus 1 year"
+  ExpiresByType font/woff2              "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # HTML always revalidates
+  <FilesMatch "\.(html)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+  # Long-lived immutable static assets
+  <FilesMatch "\.(css|js|svg|ico|png|jpe?g|webp|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Light, non-breaking security headers
+  # (No Content-Security-Policy: the page intentionally loads images, the
+  #  Geist font, and GSAP from external CDNs — a CSP would block them.)
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ----------------------------------------------------------------------
+# Don't serve the dev/docs files publicly
+# ----------------------------------------------------------------------
+<FilesMatch "(^\.|CLAUDE\.md|\.md$)">
+  Require all denied
+</FilesMatch>

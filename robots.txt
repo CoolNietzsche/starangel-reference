@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Marketing site — indexing welcome.
+Sitemap: https://sawebsite.paperless.et/sitemap.xml
