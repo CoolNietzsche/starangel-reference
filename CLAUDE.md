@@ -37,13 +37,7 @@ company, not always committed here). It marks each section as **[CONFIRMED]**,
 
 ## Layout
 
-```
-.
-├── index.html   # The entire site — one long single-page site
-└── CLAUDE.md
-```
-
-That's it. It is now a **single-page site**: everything lives in `index.html`.
+It is now a **single-page site**: everything lives in `index.html`.
 The old multi-page files (`about.html`, `services.html`, `projects.html`,
 `blogs.html`, `pricing.html`, `contact.html`, the `projects/` and `blogs/`
 folders, and `my_archive.zip`) were **removed** — their content was folded into
@@ -117,15 +111,23 @@ that is only revealed by JS without a fallback.
 - **Never invent** realistic-sounding fake content for gap sections: no fake
   client names, quotes, project names/details, registration numbers, or
   certifications. This is a hard rule (the site is used for tenders).
-- Sections currently on placeholders: **Portfolio** (needs real projects +
-  photos), **Testimonials** (needs real quotes), **Tenders & Credentials**
-  (needs real registration/licensing/insurance/references), and richer **team
-  bios / owner story**.
-- Confirmed facts safe to use: founded **2015**; **Bole Road, Addis Ababa**;
-  phone **+251 913790984**; email **starangels@gmail.com**; **30+** projects;
-  **98%** client satisfaction; the **6** services above; leadership — Yared
-  Kebede (GM), Hibst Kebede (Vice Manager), Henok Kebede (Auditor), Birhanu
-  Abate (Marketing Manager).
+- A second source, **`Starangel.pdf`** (company profile, kept in this repo),
+  provided real project names, the full leadership roster, and corrected
+  figures. Where it conflicts with earlier assumptions, it wins — it's the
+  company's own profile document.
+- Sections currently on placeholders: **Portfolio** (now has real project
+  names; still needs project-specific photos + case-study write-ups),
+  **Testimonials** (needs real quotes), **Tenders & Credentials** (has a real
+  notable-projects list now; still needs registration/licensing/insurance
+  numbers), and photos for the two newest leadership members (see below).
+- Confirmed facts safe to use: founded **2016**; **Bole Road, Addis Ababa**;
+  phone **+251 913790984** / **+251 924451560** (both General Manager);
+  email **starangelsconstructionplc@gmail.com**; **50+** projects; **98%**
+  client satisfaction; the **6** services above; leadership — Yared Kebede
+  (GM), Hibst Kebede (Vice Manager), Henok Kebede (Auditor), Birhanu Abate
+  (Quality Manager), Meskerem Kebede (Marketing Manager, no photo yet), Meron
+  Yeshiwond (Architect, no photo yet). Real project names: La'Gahare, Eagle
+  Hills, East African Holding, Piassa, PPP Project, Tor-Hailoch, Anbessa.
 
 ## Editing conventions
 
@@ -162,14 +164,5 @@ the marquees, and the sticky nav behave.
 - Active branch for this work: **`claude/claude-md-docs-w65r6v`**. Develop,
   commit, and push there; create from the latest default branch if needed. Do
   not push to `master` without explicit permission.
-- Default branch: `master`. Remote: `origin`
-  (`github.com/CoolNietzsche/starangel-reference`).
 - Commit in **small, incremental** steps with clear messages. Do **not** open a
   pull request unless explicitly asked.
-
-## Re-exporting from Framer (if it ever happens)
-
-If Star Angels rebuilds in Framer and re-exports, replace `index.html`
-wholesale — but note the export will **again** ship the dead runtime and
-agency-shaped defaults, so the neutralization + GSAP motion layer + content
-swaps documented here would need to be re-applied.
