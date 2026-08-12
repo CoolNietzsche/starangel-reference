@@ -1,0 +1,46 @@
+name: Deploy to cPanel (sawebsite.paperless.et)
+
+# Auto-deploys the site to the cPanel subdomain on every push to master.
+# Also runnable on demand from the Actions tab (workflow_dispatch).
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+# Never let two deploys run at once; a newer push supersedes an in-flight one.
+concurrency:
+  group: deploy-cpanel
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server:   ${{ secrets.FTP_SERVER }}     # e.g. paperless.et  (or the server IP / ftp.paperless.et)
+          username: ${{ secrets.FTP_USERNAME }}   # the FTP account login
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps                          # encrypted FTP over TLS (port 21, explicit)
+          port: 21
+
+          # Where to upload, relative to the FTP account's home directory.
+          #   "./"          -> use this if you create a dedicated FTP account whose
+          #                    directory is /home/paperlao/sawebsite   (recommended)
+          #   "sawebsite/"  -> use this if you log in as the main "paperlao" account
+          #                    (its FTP home is /home/paperlao)
+          server-dir: ./
+
+          # Ship only the public site; keep dev files off the server.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            CLAUDE.md
