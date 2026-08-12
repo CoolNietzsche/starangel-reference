@@ -32,11 +32,11 @@ jobs:
           port: 21
 
           # Where to upload, relative to the FTP account's home directory.
-          #   "./"          -> use this if you create a dedicated FTP account whose
-          #                    directory is /home/paperlao/sawebsite   (recommended)
-          #   "sawebsite/"  -> use this if you log in as the main "paperlao" account
-          #                    (its FTP home is /home/paperlao)
-          server-dir: ./
+          # Logging in as the main "paperlao" account (FTP home = /home/paperlao),
+          # so the subdomain docroot /home/paperlao/sawebsite is "sawebsite/".
+          #   (If you later switch to a dedicated FTP account rooted at the
+          #    subdomain folder, change this to "./".)
+          server-dir: sawebsite/
 
           # Ship only the public site; keep dev files off the server.
           exclude: |
