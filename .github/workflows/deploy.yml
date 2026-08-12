@@ -1,13 +1,27 @@
 name: Deploy to cPanel (sawebsite.paperless.et)
 
-# Auto-deploys the site to the cPanel subdomain on every push to master.
-# Also runnable on demand from the Actions tab (workflow_dispatch).
+# Auto-deploys the site to the cPanel subdomain on every push to master
+# (using repo secrets), and can also be run on demand from the Actions tab /
+# API with the FTP details passed as inputs (handy before secrets are set).
 on:
   push:
     branches: [ master ]
   workflow_dispatch:
+    inputs:
+      ftp_server:
+        description: "FTP host (falls back to FTP_SERVER secret)"
+        required: false
+      ftp_username:
+        description: "FTP username (falls back to FTP_USERNAME secret)"
+        required: false
+      ftp_password:
+        description: "FTP password (falls back to FTP_PASSWORD secret)"
+        required: false
+      protocol:
+        description: "ftp or ftps"
+        required: false
+        default: "ftps"
 
-# Never let two deploys run at once; a newer push supersedes an in-flight one.
 concurrency:
   group: deploy-cpanel
   cancel-in-progress: true
@@ -22,23 +36,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy via FTPS
+      # Ensure any credentials passed as inputs are redacted from the logs.
+      - name: Protect credentials in logs
+        env:
+          FP: ${{ github.event.inputs.ftp_password }}
+          FU: ${{ github.event.inputs.ftp_username }}
+        run: |
+          [ -n "$FP" ] && echo "::add-mask::$FP" || true
+          [ -n "$FU" ] && echo "::add-mask::$FU" || true
+
+      - name: Deploy
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server:   ${{ secrets.FTP_SERVER }}     # e.g. paperless.et  (or the server IP / ftp.paperless.et)
-          username: ${{ secrets.FTP_USERNAME }}   # the FTP account login
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps                          # encrypted FTP over TLS (port 21, explicit)
+          server:   ${{ github.event.inputs.ftp_server   || secrets.FTP_SERVER }}
+          username: ${{ github.event.inputs.ftp_username || secrets.FTP_USERNAME }}
+          password: ${{ github.event.inputs.ftp_password || secrets.FTP_PASSWORD }}
+          protocol: ${{ github.event.inputs.protocol || 'ftps' }}
           port: 21
-
-          # Where to upload, relative to the FTP account's home directory.
-          # Logging in as the main "paperlao" account (FTP home = /home/paperlao),
-          # so the subdomain docroot /home/paperlao/sawebsite is "sawebsite/".
-          #   (If you later switch to a dedicated FTP account rooted at the
-          #    subdomain folder, change this to "./".)
+          # Main "paperlao" account: FTP home = /home/paperlao, so the subdomain
+          # docroot /home/paperlao/sawebsite is "sawebsite/".
           server-dir: sawebsite/
-
-          # Ship only the public site; keep dev files off the server.
           exclude: |
             **/.git*
             **/.git*/**
