@@ -167,6 +167,11 @@ html.sa-scrolled [data-framer-name="Nav OutterWrap"]{background-color:rgba(252,2
 .sa-step-photo{width:72px;height:72px;object-fit:cover;border-radius:12px;flex:0 0 auto;margin-right:18px;align-self:flex-start;box-shadow:0 4px 14px rgba(0,0,0,0.12);}
 .sa-svc-thumb:hover,.sa-step-photo:hover{transform:none;}
 
+/* Hide leftover Framer stock-photo avatars on the placeholder testimonials
+   (no real client photos yet). Scoped to the testimonials section so the
+   many other "Top" layers on the page are untouched; keeps name/role. */
+[data-section="testimonials"] [data-framer-name="Top"] > div:first-child{display:none !important;}
+
 /* Button / CTA micro-interactions */
 [data-framer-name*="Button"]{transition:transform .2s ease, box-shadow .2s ease;}
 [data-framer-name*="Button"]:hover{transform:translateY(-2px);}
